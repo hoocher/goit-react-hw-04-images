@@ -19,17 +19,25 @@ const App = () => {
   const [ModalItem, setModalItem] = useState('');
 
   useEffect(() => {
+    const fetchApi = async () => {
+      setShowLoader(true);
+      try {
+        const data = await getImagesApi(SerchQuerry, Page);
+        if (data.hits.length === 0) {
+          return Notify.failure('Find no images');
+        }
+        setHits(prevState => prevState.concat(data.hits));
+        setTotalHits(data.totalHits);
+      } catch ({ message }) {
+        Notify.failure('Please try again later ', message);
+      } finally {
+        setShowLoader(false);
+      }
+    };
     if (SerchQuerry) {
-      setHits([]);
       fetchApi();
     }
-  }, [SerchQuerry]);
-
-  useEffect(() => {
-    if (Page !== 1) {
-      fetchApi();
-    }
-  }, [Page]);
+  }, [SerchQuerry, Page]);
 
   const onSubmit = e => {
     e.preventDefault();
@@ -47,23 +55,6 @@ const App = () => {
 
   const loadMore = () => {
     setPage(Page + 1);
-  };
-
-  const fetchApi = async () => {
-    setShowLoader(true);
-    try {
-      const data = await getImagesApi(SerchQuerry, Page);
-      if (data.hits.length === 0) {
-        return Notify.failure('Find no images');
-      }
-      const newImages = [...Hits, ...data.hits];
-      setHits(newImages);
-      setTotalHits(data.totalHits);
-    } catch ({ message }) {
-      Notify.failure('Please try again later ', message);
-    } finally {
-      setShowLoader(false);
-    }
   };
 
   const largeImageOpen = largeImageURL => {
