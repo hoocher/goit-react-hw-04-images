@@ -1,14 +1,12 @@
 import { DButton, DivContainer } from 'components/Button/Button.styled';
 
-const Button = ({ onClick, showBtn }) => {
+const Button = ({ onClick }) => {
   return (
-    !showBtn && (
-      <DivContainer>
-        <DButton type="button" onClick={onClick}>
-          Load more
-        </DButton>
-      </DivContainer>
-    )
+    <DivContainer>
+      <DButton type="button" onClick={onClick}>
+        Load more
+      </DButton>
+    </DivContainer>
   );
 };
 export default Button;

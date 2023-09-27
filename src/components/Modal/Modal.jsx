@@ -1,26 +1,42 @@
-import { Component } from 'react';
-import { createPortal } from 'react-dom';
+import { useEffect } from 'react';
 import { ModalBackdrop, ModalWindow } from './Modal.styled';
 
-const modalR = document.querySelector('#modalRoot');
+const Modal = ({ largeImg, closeModal }) => {
+  useEffect(() => {
+    window.addEventListener('keydown', closeModal);
+    return () => {
+      window.removeEventListener('keydown', closeModal);
+    };
+  }, []);
 
-export default class Modal extends Component {
-  componentDidMount() {
-    window.addEventListener('keydown', this.props.onClick);
-  }
+  return (
+    <ModalBackdrop onClick={closeModal} data-id="backdrop">
+      <ModalWindow>
+        <img src={largeImg} alt="#" />
+      </ModalWindow>
+    </ModalBackdrop>
+  );
+};
 
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.props.onClick);
-  }
+export default Modal;
 
-  render() {
-    return createPortal(
-      <ModalBackdrop onClick={this.props.onClick} data-id="backdrop">
-        <ModalWindow>
-          <img src={this.props.largeImg} alt="this.props.children.tags" />
-        </ModalWindow>
-      </ModalBackdrop>,
-      modalR
-    );
-  }
-}
+// export default class Modal extends Component {
+//   componentDidMount() {
+//     window.addEventListener('keydown', this.props.closeModal);
+//   }
+
+//   componentWillUnmount() {
+//     window.removeEventListener('keydown', this.props.closeModal);
+//   }
+
+//   render() {
+//     return createPortal(
+//       <ModalBackdrop onClick={this.props.closeModal} data-id="backdrop">
+//         <ModalWindow>
+//           <img src={this.props.largeImg} alt="this.props.children.tags" />
+//         </ModalWindow>
+//       </ModalBackdrop>,
+//       modalR
+//     );
+//   }
+// }

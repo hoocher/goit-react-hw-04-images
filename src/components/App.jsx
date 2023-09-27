@@ -1,54 +1,37 @@
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
-import { Component } from 'react';
+import { useEffect } from 'react';
 import ImageGallery from './ImageGallery/ImageGallery';
 import Searchbar from './Searchbar/Searchbar';
 import { getImagesApi } from 'api/pixabayApi';
 import Button from './Button/Button';
 import Loader from './Loader/Loader';
 import Modal from './Modal/Modal';
+import React from 'react';
+import { useState } from 'react';
 
-export class App extends Component {
-  state = {
-    totalHits: null,
-    hits: [],
-    searchTag: null,
-    page: 1,
-    showLoader: false,
-    showModal: false,
-    modalItem: '',
-  };
+const App = () => {
+  const [SerchQuerry, setSerchQuerry] = useState();
+  const [Page, setPage] = useState(1);
+  const [Hits, setHits] = useState([]);
+  const [TotalHits, setTotalHits] = useState(null);
+  const [ShowLoader, setShowLoader] = useState(false);
+  const [ShowModal, setShowModal] = useState(false);
+  const [ModalItem, setModalItem] = useState('');
 
-  componentDidUpdate(_, prevState) {
-    if (
-      this.state.searchTag !== prevState.searchTag ||
-      this.state.page !== prevState.page
-    ) {
-      this.fetchApi();
+  useEffect(() => {
+    if (SerchQuerry) {
+      setHits([]);
+      fetchApi();
     }
-  }
+  }, [SerchQuerry]);
 
-  fetchApi = async () => {
-    this.setState({ showLoader: true });
-    try {
-      const data = await getImagesApi(this.state.searchTag, this.state.page);
-      const newImages = [...this.state.hits, ...data.hits];
-      if (data.hits.length === 0) {
-        return Notify.failure('Find no images');
-      }
-      this.setState({
-        hits: newImages,
-        totalHits: data.totalHits,
-      });
-    } catch ({ message }) {
-      Notify.failure('Please try again later ', message);
-    } finally {
-      this.setState({
-        showLoader: false,
-      });
+  useEffect(() => {
+    if (Page !== 1) {
+      fetchApi();
     }
-  };
+  }, [Page]);
 
-  onSubmit = async e => {
+  const onSubmit = e => {
     e.preventDefault();
     let String = e.target[1].value;
     let pattern = /^[\s]+$/;
@@ -57,53 +40,52 @@ export class App extends Component {
         'Please type serching tag or delete spase from begining'
       );
     }
-    this.setState({
-      searchTag: e.target[1].value,
-      page: 1,
-      hits: [],
-    });
+    setSerchQuerry(e.target[1].value);
+    setPage(1);
+    setHits([]);
   };
 
-  loadMore = () => {
-    this.setState(prevState => {
-      return { page: prevState.page + 1 };
-    });
+  const loadMore = () => {
+    setPage(Page + 1);
   };
 
-  largeImageOpen = (largeURL, e) => {
-    this.setState({
-      showModal: true,
-      modalItem: largeURL,
-    });
-  };
-
-  closeModal = e => {
-    if (e.target.src !== this.state.modalItem || e.code === 'Escape') {
-      this.setState({ showModal: false });
+  const fetchApi = async () => {
+    setShowLoader(true);
+    try {
+      const data = await getImagesApi(SerchQuerry, Page);
+      if (data.hits.length === 0) {
+        return Notify.failure('Find no images');
+      }
+      const newImages = [...Hits, ...data.hits];
+      setHits(newImages);
+      setTotalHits(data.totalHits);
+    } catch ({ message }) {
+      Notify.failure('Please try again later ', message);
+    } finally {
+      setShowLoader(false);
     }
   };
 
-  render() {
-    const { showModal } = this.state;
-    return (
-      <>
-        <Searchbar onSubmit={this.onSubmit} />
-        <ImageGallery images={this.state.hits} onClick={this.largeImageOpen} />
-        <Loader showLoader={this.state.showLoader} />
-        {this.state.hits.length < this.state.totalHits && (
-          <Button
-            onClick={this.loadMore}
-            totalHits={this.state.hits}
-            showBtn={this.state.showLoader}
-          />
-        )}
+  const largeImageOpen = largeImageURL => {
+    setModalItem(largeImageURL);
+    setShowModal(true);
+  };
 
-        {showModal && (
-          <Modal largeImg={this.state.modalItem} onClick={this.closeModal} />
-        )}
-      </>
-    );
-  }
-}
+  const closeModal = e => {
+    if (e.target.src !== ModalItem || e.code === 'Escape') {
+      setShowModal(false);
+    }
+  };
+
+  return (
+    <>
+      <Searchbar onSubmit={onSubmit} />
+      <ImageGallery images={Hits} onClick={largeImageOpen} />
+      {ShowLoader && <Loader />}
+      {!ShowLoader && Hits.length < TotalHits && <Button onClick={loadMore} />}
+      {ShowModal && <Modal largeImg={ModalItem} closeModal={closeModal} />}
+    </>
+  );
+};
 
 export default App;
