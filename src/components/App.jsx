@@ -10,19 +10,19 @@ import React from 'react';
 import { useState } from 'react';
 
 const App = () => {
-  const [SerchQuerry, setSerchQuerry] = useState();
-  const [Page, setPage] = useState(1);
-  const [Hits, setHits] = useState([]);
-  const [TotalHits, setTotalHits] = useState(null);
-  const [ShowLoader, setShowLoader] = useState(false);
-  const [ShowModal, setShowModal] = useState(false);
-  const [ModalItem, setModalItem] = useState('');
+  const [serchQuerry, setSerchQuerry] = useState();
+  const [page, setPage] = useState(1);
+  const [hits, setHits] = useState([]);
+  const [totalHits, setTotalHits] = useState(null);
+  const [showLoader, setShowLoader] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [modalItem, setModalItem] = useState('');
 
   useEffect(() => {
     const fetchApi = async () => {
       setShowLoader(true);
       try {
-        const data = await getImagesApi(SerchQuerry, Page);
+        const data = await getImagesApi(serchQuerry, page);
         if (data.hits.length === 0) {
           return Notify.failure('Find no images');
         }
@@ -34,10 +34,10 @@ const App = () => {
         setShowLoader(false);
       }
     };
-    if (SerchQuerry) {
+    if (serchQuerry) {
       fetchApi();
     }
-  }, [SerchQuerry, Page]);
+  }, [serchQuerry, page]);
 
   const onSubmit = e => {
     e.preventDefault();
@@ -54,7 +54,7 @@ const App = () => {
   };
 
   const loadMore = () => {
-    setPage(Page + 1);
+    setPage(prev => prev + 1);
   };
 
   const largeImageOpen = largeImageURL => {
@@ -63,7 +63,7 @@ const App = () => {
   };
 
   const closeModal = e => {
-    if (e.target.src !== ModalItem || e.code === 'Escape') {
+    if (e.target.src !== modalItem || e.code === 'Escape') {
       setShowModal(false);
     }
   };
@@ -71,10 +71,12 @@ const App = () => {
   return (
     <>
       <Searchbar onSubmit={onSubmit} />
-      <ImageGallery images={Hits} onClick={largeImageOpen} />
-      {ShowLoader && <Loader />}
-      {!ShowLoader && Hits.length < TotalHits && <Button onClick={loadMore} />}
-      {ShowModal && <Modal largeImg={ModalItem} closeModal={closeModal} />}
+      <ImageGallery images={hits} onClick={largeImageOpen} />
+      {showLoader && <Loader />}
+      {!showLoader && hits.length < totalHits && hits.length > 0 && (
+        <Button onClick={loadMore} />
+      )}
+      {showModal && <Modal largeImg={modalItem} closeModal={closeModal} />}
     </>
   );
 };
